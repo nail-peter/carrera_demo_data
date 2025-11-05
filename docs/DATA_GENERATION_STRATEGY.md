@@ -260,11 +260,224 @@ After generation, validate:
 
 ---
 
+## Enhanced Q&A (Discover) Integration
+
+### Critical Requirements for Q&A Success
+
+To ensure all Enhanced Q&A features work optimally, the dataset must support:
+
+#### 1. Cross-Metric Analysis Chains
+
+Design interconnected metric groups that answer multi-metric questions:
+
+**Performance Chain**:
+- Practice Session Attendance → Lap Time Improvement → Race Position → Win Rate
+- *Example Q&A*: "How does practice frequency correlate with race performance across drivers?"
+
+**Equipment Chain**:
+- Maintenance Frequency → Car Reliability Score → Race Completion Rate → Average Position
+- *Example Q&A*: "Show me the relationship between car maintenance and race outcomes"
+
+**Environmental Chain**:
+- Track Temperature → Tire Grip Index → Lap Times → Speed Metrics
+- *Example Q&A*: "What's the connection between track conditions and performance metrics?"
+
+**Strategy Chain**:
+- Pit Stop Count → Total Pit Time → Time Lost → Final Position
+- *Example Q&A*: "How do pit stop strategies impact race results?"
+
+#### 2. Common Contributors Design
+
+Structure data so multiple metrics share obvious common drivers:
+
+**Example**: Track Section "Hairpin Turn"
+- Drives slowest lap time segments ✓
+- Drives highest incident rates ✓
+- Drives most lane change attempts ✓
+- *Q&A can identify this section as common contributor across metrics*
+
+**Example**: Driver "Alex Chen" (during improvement period)
+- Top contributor to average speed increases ✓
+- Top contributor to lap time improvements ✓
+- Top contributor to consistency gains ✓
+- *Q&A can highlight as key driver of multiple positive trends*
+
+#### 3. Dimensional Breakdown Hierarchies
+
+Create clear hierarchies that support drill-down questions:
+
+**Time Hierarchy**:
+```
+Year → Quarter → Month → Week → Day → Session → Lap
+```
+- Supports: "Show me performance over time at different granularities"
+
+**Location Hierarchy**:
+```
+Track Configuration → Lane → Section → Segment
+```
+- Supports: "Break down lap times by track location"
+
+**Driver Hierarchy**:
+```
+Experience Level → Team → Individual Driver
+```
+- Supports: "Compare performance across driver experience levels"
+
+**Equipment Hierarchy**:
+```
+Car Model → Individual Car → Configuration → Component
+```
+- Supports: "Analyze performance by car type and configuration"
+
+#### 4. Scope Refinement Patterns
+
+Ensure filters work naturally with conversational queries:
+
+**Time-based Scopes**:
+- "Last 7 days", "This month", "Q3", "Last quarter", "This season"
+- Generate date ranges that align with common business questions
+
+**Condition-based Scopes**:
+- "High temperature sessions" (>24°C)
+- "Weekend races" (Saturday-Sunday)
+- "Large crowd events" (>50 spectators)
+- "Morning sessions" (before noon)
+
+**Performance-based Scopes**:
+- "Top performing drivers" (top 25%)
+- "Recent maintenance" (within 14 days)
+- "Competitive races" (position changes >5)
+
+#### 5. Metric Correlation Candidates
+
+For each primary metric, define 3-5 correlation candidates:
+
+**Primary Metric: Lap Time**
+- Correlation Candidates:
+  1. Average Speed (strong negative)
+  2. Track Temperature (moderate positive)
+  3. Pit Stop Count (moderate positive)
+  4. Driver Experience Level (moderate negative)
+  5. Car Maintenance Days Since (weak positive)
+
+**Primary Metric: Race Position**
+- Correlation Candidates:
+  1. Lap Time Consistency (strong negative)
+  2. Total Pit Time (moderate positive)
+  3. Starting Position (moderate positive)
+  4. Overtake Success Rate (strong negative)
+  5. Incident Count (moderate positive)
+
+### Data Generation Rules for Q&A
+
+#### Rule 1: Avoid Ambiguity
+
+❌ **Bad**: Dimension values with typos or variations
+- "Red Lightning", "red lightning", "RedLightning", "Red Ltng"
+
+✅ **Good**: Consistent, clean values
+- Always: "Red Lightning"
+
+#### Rule 2: Create Obvious Patterns
+
+Make correlations and patterns detectable:
+
+✅ **Strong correlation example**:
+```python
+# When track_temp increases, lap_time increases proportionally
+lap_time_base = 3.5
+temp_effect = (track_temp - 20) * 0.02  # 0.02s per degree above 20°C
+lap_time = lap_time_base + temp_effect + small_random_noise
+```
+
+✅ **Common contributor example**:
+```python
+# "Hairpin Turn" section affects multiple metrics negatively
+if track_section == "Hairpin Turn":
+    lap_segment_time *= 1.4  # Slower
+    incident_probability *= 2.5  # More incidents
+    overtake_attempts *= 1.8  # More attempts
+```
+
+#### Rule 3: Support Dynamic Filtering
+
+Ensure dimensional values support natural filtering:
+
+✅ **Time filters**:
+- Include metadata: is_weekend, time_of_day_category, season
+- Enable questions like: "Show me weekend performance"
+
+✅ **Performance filters**:
+- Include rankings: driver_rank_this_month, car_percentile
+- Enable questions like: "Focus on top 3 drivers"
+
+✅ **Condition filters**:
+- Include categories: temp_category (cool/normal/hot), crowd_size_category
+- Enable questions like: "Only analyze hot weather sessions"
+
+#### Rule 4: Sufficient Data for Trend Detection
+
+**Minimum Requirements**:
+- At least 30 data points per metric for basic trends
+- At least 60 data points for seasonal patterns
+- At least 90 data points for reliable forecasting
+- At least 10 data points per dimensional category
+
+**Example**:
+```python
+# For driver "Alex Chen" to show learning trend
+# Need: 60+ laps across 8+ weeks
+# Frequency: 2-3 sessions per week, 3-4 laps per session
+```
+
+#### Rule 5: Validate Q&A Questions During Generation
+
+After generating data, test these questions:
+
+**Must Work** (Basic functionality):
+- [ ] "Show me lap time trends"
+- [ ] "Which driver has the fastest average?"
+- [ ] "Compare morning vs evening sessions"
+- [ ] "Break down by car model"
+
+**Should Work** (Core features):
+- [ ] "What's driving the improvement in lap times?"
+- [ ] "How do pit stops correlate with race position?"
+- [ ] "Show unexpected performance changes"
+- [ ] "Which track sections are slowest?"
+
+**Nice to Have** (Advanced features):
+- [ ] "How do track temperature and car model both affect lap times across different drivers?"
+- [ ] "Which factors are common contributors to speed and consistency?"
+- [ ] "Show me performance for top 3 drivers during weekend races with large crowds"
+
+---
+
+## Validation Checks (Updated)
+
+After generation, validate:
+- [ ] All insight types can be demonstrated
+- [ ] Correlations exist as designed (test with scatter plots)
+- [ ] Storylines are detectable visually
+- [ ] No impossible values (negative times, etc.)
+- [ ] Sufficient data for forecasting (60+ points per metric)
+- [ ] Clear dimension hierarchies work in drill-downs
+- [ ] **Enhanced Q&A questions return expected results**
+- [ ] **Cross-metric analysis reveals designed patterns**
+- [ ] **Common contributors are correctly identified**
+- [ ] **Dynamic filtering works with natural language scopes**
+- [ ] **Dimensional breakdowns align with hierarchies**
+
+---
+
 ## Next Steps
 
 1. Receive actual schema from user
-2. Map schema to these patterns
+2. Map schema to these patterns and Q&A requirements
 3. Review example data to understand format
-4. Build data generation scripts
+4. Build data generation scripts with Q&A validation
 5. Generate and validate dataset
-6. Create Tableau Pulse configuration guide
+6. Test all demo questions from ENHANCED_QA_DISCOVER.md
+7. Create Tableau Pulse configuration guide
+8. Build demo question playbook
